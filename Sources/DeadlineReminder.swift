@@ -1,9 +1,24 @@
 import SwiftUI
 
+let singaporeTimeZone = TimeZone(identifier: "Asia/Singapore")!
+let singaporeDateFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    formatter.timeStyle = .none
+    formatter.timeZone = singaporeTimeZone
+    return formatter
+}()
+var singaporeCalendar: Calendar {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = singaporeTimeZone
+    return calendar
+}
+
 struct Reminder: Identifiable, Codable {
     var id = UUID()
     var name: String
     var deadline: Date
+    var details: String? = nil
     var completed = false
 }
 
@@ -18,7 +33,18 @@ final class ReminderStore: ObservableObject {
     init() {
         if let data = UserDefaults.standard.data(forKey: "reminders"),
            let saved = try? JSONDecoder().decode([Reminder].self, from: data) {
-            reminders = saved
+            reminders = saved.map { item in
+                var migrated = item
+                if item.details == nil {
+                    let components = Calendar.current.dateComponents([.year, .month, .day], from: item.deadline)
+                    migrated.deadline = singaporeCalendar.date(from: components) ?? item.deadline
+                    migrated.details = ""
+                }
+                return migrated
+            }
+            if let data = try? JSONEncoder().encode(reminders) {
+                UserDefaults.standard.set(data, forKey: "reminders")
+            }
         }
     }
 }
@@ -64,22 +90,23 @@ struct ContentView: View {
         }
         .frame(minWidth: 580, minHeight: 400)
         .sheet(isPresented: $adding) {
-            Editor(reminder: nil) { name, date in
-                store.reminders.append(Reminder(name: name, deadline: date))
+            Editor(reminder: nil) { name, date, details in
+                store.reminders.append(Reminder(name: name, deadline: date, details: details))
             }
         }
         .sheet(item: $editing) { reminder in
-            Editor(reminder: reminder) { name, date in
+            Editor(reminder: reminder) { name, date, details in
                 if let index = store.reminders.firstIndex(where: { $0.id == reminder.id }) {
                     store.reminders[index].name = name
                     store.reminders[index].deadline = date
+                    store.reminders[index].details = details
                 }
             }
         }
     }
 
     @ViewBuilder private func row(_ reminder: Reminder, now: Date) -> some View {
-        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: now), to: Calendar.current.startOfDay(for: reminder.deadline)).day ?? 0
+        let days = singaporeCalendar.dateComponents([.day], from: singaporeCalendar.startOfDay(for: now), to: singaporeCalendar.startOfDay(for: reminder.deadline)).day ?? 0
         HStack(spacing: 14) {
             Button {
                 if let index = store.reminders.firstIndex(where: { $0.id == reminder.id }) {
@@ -91,7 +118,10 @@ struct ContentView: View {
             }.buttonStyle(.plain).help(reminder.completed ? "Mark incomplete" : "Mark complete")
             VStack(alignment: .leading, spacing: 5) {
                 Text(reminder.name).font(.headline).strikethrough(reminder.completed)
-                Text("Deadline: \(reminder.deadline.formatted(date: .abbreviated, time: .omitted))")
+                if let details = reminder.details, !details.isEmpty {
+                    Text(details).font(.subheadline).foregroundStyle(.secondary)
+                }
+                Text("Deadline: \(singaporeDateFormatter.string(from: reminder.deadline)) · Singapore time")
                     .font(.subheadline).foregroundStyle(.secondary)
             }
             Spacer()
@@ -109,28 +139,33 @@ struct ContentView: View {
 
 struct Editor: View {
     let reminder: Reminder?
-    let onSave: (String, Date) -> Void
+    let onSave: (String, Date, String) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name: String
     @State private var deadline: Date
+    @State private var details: String
     @FocusState private var focused: Bool
 
-    init(reminder: Reminder?, onSave: @escaping (String, Date) -> Void) {
+    init(reminder: Reminder?, onSave: @escaping (String, Date, String) -> Void) {
         self.reminder = reminder
         self.onSave = onSave
         _name = State(initialValue: reminder?.name ?? "")
         _deadline = State(initialValue: reminder?.deadline ?? Date())
+        _details = State(initialValue: reminder?.details ?? "")
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text(reminder == nil ? "Add a task" : "Edit task").font(.title2.bold())
             TextField("Task name", text: $name).textFieldStyle(.roundedBorder).focused($focused)
-            DatePicker("Deadline", selection: $deadline, displayedComponents: .date)
+            TextField("Short description (optional)", text: $details).textFieldStyle(.roundedBorder)
+            DatePicker("Deadline (Singapore time)", selection: $deadline, displayedComponents: .date)
+                .environment(\.timeZone, singaporeTimeZone)
+                .environment(\.calendar, singaporeCalendar)
             HStack {
                 Spacer()
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
                 Button("Save") {
-                    onSave(name.trimmingCharacters(in: .whitespacesAndNewlines), deadline)
+                    onSave(name.trimmingCharacters(in: .whitespacesAndNewlines), deadline, details.trimmingCharacters(in: .whitespacesAndNewlines))
                     dismiss()
                 }.keyboardShortcut(.defaultAction).disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
