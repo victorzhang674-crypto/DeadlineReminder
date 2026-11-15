@@ -4,7 +4,7 @@ A native macOS app for keeping task deadlines visible. Add, edit, complete, and 
 
 ## Build and install
 
-Requires macOS and the Swift compiler from Xcode or the Xcode Command Line Tools.
+Requires macOS and Xcode, including its macOS SDK, to build the widget extension.
 
 ```sh
 ./build.sh

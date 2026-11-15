@@ -1,0 +1,23 @@
+// !$*UTF8*$!
+{
+ archiveVersion = 1;
+ classes = {};
+ objectVersion = 56;
+ objects = {
+  A00000000000000000000001 = {isa = PBXBuildFile; fileRef = A00000000000000000000002; };
+  A00000000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadlineWidget.swift; sourceTree = "<group>"; };
+  A00000000000000000000003 = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DeadlineWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+  A00000000000000000000004 = {isa = PBXGroup; children = (A00000000000000000000002, A00000000000000000000005); sourceTree = "<group>"; };
+  A00000000000000000000005 = {isa = PBXGroup; children = (A00000000000000000000003); name = Products; sourceTree = "<group>"; };
+  A00000000000000000000006 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000001); runOnlyForDeploymentPostprocessing = 0; };
+  A00000000000000000000007 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+  A00000000000000000000008 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+  A00000000000000000000009 = {isa = PBXNativeTarget; buildConfigurationList = A0000000000000000000000C; buildPhases = (A00000000000000000000006,A00000000000000000000007,A00000000000000000000008); buildRules = (); dependencies = (); name = DeadlineWidget; productName = DeadlineWidget; productReference = A00000000000000000000003; productType = "com.apple.product-type.app-extension"; };
+  A0000000000000000000000A = {isa = PBXProject; attributes = { LastUpgradeCheck = 1600; }; buildConfigurationList = A0000000000000000000000B; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en,Base); mainGroup = A00000000000000000000004; productRefGroup = A00000000000000000000005; projectDirPath = ""; projectRoot = ""; targets = (A00000000000000000000009); };
+  A0000000000000000000000B = {isa = XCConfigurationList; buildConfigurations = (A0000000000000000000000D); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+  A0000000000000000000000C = {isa = XCConfigurationList; buildConfigurations = (A0000000000000000000000E); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+  A0000000000000000000000D = {isa = XCBuildConfiguration; buildSettings = { SDKROOT = macosx; MACOSX_DEPLOYMENT_TARGET = 14.0; }; name = Release; };
+  A0000000000000000000000E = {isa = XCBuildConfiguration; buildSettings = { APPLICATION_EXTENSION_API_ONLY = YES; CODE_SIGNING_ALLOWED = NO; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = Info.plist; INFOPLIST_KEY_CFBundleDisplayName = "Deadline Reminder"; PRODUCT_BUNDLE_IDENTIFIER = "local.deadline-reminder.app.widget"; PRODUCT_NAME = DeadlineWidget; SKIP_INSTALL = YES; SWIFT_VERSION = 5.0; }; name = Release; };
+ };
+ rootObject = A0000000000000000000000A;
+}

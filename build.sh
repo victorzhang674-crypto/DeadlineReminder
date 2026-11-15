@@ -5,7 +5,7 @@ TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/deadline-reminder.XXXXXX")
 trap 'rm -rf "$TEMP_DIR"' EXIT
 APP="$TEMP_DIR/Deadline Reminder.app"
 mkdir -p "$APP/Contents/MacOS"
-swiftc -parse-as-library -O Sources/DeadlineReminder.swift -o "$APP/Contents/MacOS/Deadline Reminder"
+swiftc -target "$(uname -m)-apple-macosx14.0" -parse-as-library -O Sources/DeadlineReminder.swift -o "$APP/Contents/MacOS/Deadline Reminder"
 cat > "$APP/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -21,24 +21,10 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </dict></plist>
 PLIST
 WIDGET="$APP/Contents/PlugIns/DeadlineWidget.appex"
-mkdir -p "$WIDGET/Contents/MacOS"
-swiftc -parse-as-library -application-extension -O Widget/DeadlineWidget.swift -o "$WIDGET/Contents/MacOS/DeadlineWidget"
-cat > "$WIDGET/Contents/Info.plist" <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-<key>CFBundleName</key><string>Deadline Reminder Widget</string>
-<key>CFBundleDisplayName</key><string>Deadline Reminder</string>
-<key>CFBundleIdentifier</key><string>local.deadline-reminder.app.widget</string>
-<key>CFBundleVersion</key><string>1</string>
-<key>CFBundleShortVersionString</key><string>1.0</string>
-<key>CFBundleExecutable</key><string>DeadlineWidget</string>
-<key>CFBundlePackageType</key><string>XPC!</string>
-<key>CFBundleSupportedPlatforms</key><array><string>MacOSX</string></array>
-<key>LSMinimumSystemVersion</key><string>14.0</string>
-<key>NSExtension</key><dict><key>NSExtensionPointIdentifier</key><string>com.apple.widgetkit-extension</string></dict>
-</dict></plist>
-PLIST
+xcodebuild -quiet -project Widget/DeadlineWidget.xcodeproj -target DeadlineWidget -configuration Release \
+    "SYMROOT=$TEMP_DIR/xcode-build" CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=YES build
+mkdir -p "$APP/Contents/PlugIns"
+ditto "$TEMP_DIR/xcode-build/Release/DeadlineWidget.appex" "$WIDGET"
 codesign --force --sign - --entitlements Widget/Entitlements.plist "$WIDGET"
 codesign --force --sign - "$APP"
 mkdir -p build
