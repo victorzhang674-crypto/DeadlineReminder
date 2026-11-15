@@ -13,4 +13,8 @@ ditto 'build/Deadline Reminder.app' "$HOME/Applications/Deadline Reminder.app"
 open "$HOME/Applications/Deadline Reminder.app"
 ```
 
-Use Command-N to add a task. While the app is running, a compact desktop panel shows up to four incomplete tasks; click Open to manage them. The panel is an app window, not a WidgetKit widget, and disappears when the app quits. The count changes at midnight Singapore time (Asia/Singapore), regardless of the Mac’s time zone. The app displays reminders while it is open; it does not send notifications. Task data is stored in macOS preferences under the app's bundle identifier, `local.deadline-reminder.app`.
+## Add the desktop widget
+
+Open Deadline Reminder once after installing. Right-click an empty area of the desktop, choose **Edit Widgets**, search for **Deadline Reminder**, and click or drag the desired size onto the desktop. Choose **Done** to finish. macOS controls widget refresh timing; changes may take a little while to appear.
+
+Use Command-N to add a task. The widget displays incomplete tasks and their deadlines, with day counts based on midnight in Singapore (Asia/Singapore), regardless of the Mac’s time zone. The app does not send notifications. Task data remains on the Mac. The widget reads a copy in its own local container; opening the app updates that copy.
