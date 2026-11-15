@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 let singaporeTimeZone = TimeZone(identifier: "Asia/Singapore")!
 let singaporeDateFormatter: DateFormatter = {
@@ -23,6 +24,7 @@ struct Reminder: Identifiable, Codable {
 }
 
 final class ReminderStore: ObservableObject {
+    static let shared = ReminderStore()
     @Published var reminders: [Reminder] = [] {
         didSet {
             if let data = try? JSONEncoder().encode(reminders) {
@@ -50,7 +52,7 @@ final class ReminderStore: ObservableObject {
 }
 
 struct ContentView: View {
-    @StateObject private var store = ReminderStore()
+    @ObservedObject private var store = ReminderStore.shared
     @State private var adding = false
     @State private var editing: Reminder?
 
@@ -173,7 +175,68 @@ struct Editor: View {
     }
 }
 
+struct DesktopWidget: View {
+    @ObservedObject var store: ReminderStore
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 60)) { context in
+            let upcoming = store.reminders.filter { !$0.completed }.sorted { $0.deadline < $1.deadline }
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Label("Deadlines", systemImage: "calendar.badge.clock").font(.headline)
+                    Spacer()
+                    Button("Open") {
+                        NSApp.activate(ignoringOtherApps: true)
+                        NSApp.windows.first { !($0 is NSPanel) && $0.canBecomeKey }?.makeKeyAndOrderFront(nil)
+                    }.buttonStyle(.plain).font(.caption.bold())
+                }
+                Text("SINGAPORE TIME").font(.caption2.bold()).foregroundStyle(.secondary)
+                if upcoming.isEmpty {
+                    Spacer()
+                    Text("No upcoming tasks").foregroundStyle(.secondary)
+                    Spacer()
+                } else {
+                    ForEach(Array(upcoming.prefix(4))) { reminder in
+                        let days = singaporeCalendar.dateComponents([.day], from: singaporeCalendar.startOfDay(for: context.date), to: singaporeCalendar.startOfDay(for: reminder.deadline)).day ?? 0
+                        HStack(alignment: .top) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(reminder.name).font(.subheadline.bold()).lineLimit(1)
+                                Text(singaporeDateFormatter.string(from: reminder.deadline)).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: 4)
+                            Text(days < 0 ? "\(-days)d overdue" : days == 0 ? "Today" : "\(days)d left")
+                                .font(.caption.bold()).foregroundStyle(days <= 0 ? Color.red : days <= 3 ? Color.orange : Color.blue)
+                        }
+                    }
+                    Spacer(minLength: 0)
+                    if upcoming.count > 4 { Text("+\(upcoming.count - 4) more in the app").font(.caption).foregroundStyle(.secondary) }
+                }
+            }.padding(16).frame(width: 300, height: 250, alignment: .topLeading)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
+        }
+    }
+}
+
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var widget: NSPanel?
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        guard let screen = NSScreen.main else { return }
+        let panel = NSPanel(contentRect: NSRect(x: screen.visibleFrame.maxX - 320, y: screen.visibleFrame.maxY - 270, width: 300, height: 250),
+                            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        panel.contentView = NSHostingView(rootView: DesktopWidget(store: .shared))
+        panel.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.desktopWindow)) + 1)
+        panel.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = true
+        panel.isReleasedWhenClosed = false
+        panel.orderFrontRegardless()
+        widget = panel
+    }
+}
+
 @main struct DeadlineReminderApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     var body: some Scene {
         WindowGroup { ContentView() }.defaultSize(width: 680, height: 500)
     }

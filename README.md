@@ -13,4 +13,4 @@ ditto 'build/Deadline Reminder.app' "$HOME/Applications/Deadline Reminder.app"
 open "$HOME/Applications/Deadline Reminder.app"
 ```
 
-Use Command-N to add a task. The count changes at midnight Singapore time (Asia/Singapore), regardless of the Mac’s time zone. The app displays reminders while it is open; it does not send notifications. Task data is stored in macOS preferences under the app's bundle identifier, `local.deadline-reminder.app`.
+Use Command-N to add a task. While the app is running, a compact desktop panel shows up to four incomplete tasks; click Open to manage them. The panel is an app window, not a WidgetKit widget, and disappears when the app quits. The count changes at midnight Singapore time (Asia/Singapore), regardless of the Mac’s time zone. The app displays reminders while it is open; it does not send notifications. Task data is stored in macOS preferences under the app's bundle identifier, `local.deadline-reminder.app`.
