@@ -8,9 +8,8 @@ Requires macOS and the Swift compiler from Xcode or the Xcode Command Line Tools
 
 ```sh
 ./build.sh
-mkdir -p ~/Applications
-ditto 'build/Deadline Reminder.app' "$HOME/Applications/Deadline Reminder.app"
-open "$HOME/Applications/Deadline Reminder.app"
+ditto 'build/Deadline Reminder.app' "/Applications/Deadline Reminder.app"
+open "/Applications/Deadline Reminder.app"
 ```
 
 ## Add the desktop widget
